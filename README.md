@@ -164,6 +164,7 @@ Things to remember when publishing a message:
  * If `body` is a Buffer, it will be sent as a byte array and `contentType` will be "application/octet-stream"
  * By default, the type specifier will be used if no routing key is undefined
  * Use a routing key of `""` to prevent the type specifier from being used as the routing key
+ * Non-persistent messages in a queue will be lost on server restart, default is non-persistent.  Persistence can be set on either an exchange when it is created via addExchange, or when sending a message (needed when using "default" exchanges since non-persistent publish is the default)
 
 This example shows all of the available properties (including those which get set by default):
 
@@ -179,6 +180,7 @@ rabbit.publish( "exchange.name",
 		expiresAfter: 1000 // TTL in ms, in this example 1 second
 		timestamp: // posix timestamp (long)
 		mandatory: true, //Must be set to true for onReturned to receive unqueued message
+		persistent: true, //If either message or exchange defines persistent=true queued messages will be saved to disk.
 		headers: {
 			random: "application specific value"
 		},
@@ -468,7 +470,7 @@ The deserialize function takes both the raw bytes and the encoding sent. While "
 var yaml = require( "js-yaml" );
 
 rabbit.addSerializer( "application/yaml", {
-	deserializer: function( bytes, encoding ) {
+	deserialize: function( bytes, encoding ) {
 		return yaml.safeLoad( bytes.toString( encoding || "utf8" ) );
 	},
 	serialize: function( object ) {
@@ -507,6 +509,7 @@ Options is a hash that can contain the following:
  * limit 			2^16			max number of unacked messages allowed for consumer
  * noAck			true|false 		the server will remove messages from the queue as soon as they are delivered
  * noBatch			true|false 		causes ack, nack & reject to take place immediately
+ * noCacheKeys		true|false 		disable cache of matched routing keys to prevent unbounded memory growth
  * queueLimit		2^32			max number of ready messages a queue can hold
  * messageTtl		2^32			time in ms before a message expires on the queue
  * expires			2^32			time in ms before a queue with 0 consumers expires
